@@ -27,9 +27,6 @@ Gem::Specification.new do |spec|
   spec.add_development_dependency "minitest", "~> 5.9"
   spec.add_development_dependency "gimme", "~> 0.5"
   spec.add_development_dependency "github_changelog_generator"
-
-  if Gem.ruby_version >= Gem::Version.new("1.9.3")
-    spec.add_development_dependency "codeclimate-test-reporter"
-    spec.add_development_dependency "simplecov", "~> 0.11.2" #<--only here to lock
-  end
+  spec.add_development_dependency "codeclimate-test-reporter"
+  spec.add_development_dependency "simplecov", "~> 0.11.2" #<--only here to lock
 end
