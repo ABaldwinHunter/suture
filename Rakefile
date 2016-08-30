@@ -13,4 +13,28 @@ Rake::TestTask.new(:safe) do |t|
   t.test_files = FileList['safe/helper.rb', 'safe/**/*_test.rb']
 end
 
-task :default => [:test, :safe]
+Rake::TestTask.new(:everything) do |t|
+  t.libs << "test"
+  t.libs << "safe"
+  t.libs << "lib"
+  t.test_files = FileList[
+    'safe/support/code_climate',
+    'test/helper.rb',
+    'test/**/*_test.rb',
+    'safe/helper.rb',
+    'safe/**/*_test.rb'
+  ]
+end
+
+require 'github_changelog_generator/task'
+GitHubChangelogGenerator::RakeTask.new :changelog
+task :changelog_commit do
+  require "suture"
+  cmd = "git commit -m \"Changelog for #{Suture::VERSION}\" -- CHANGELOG.md"
+  puts "-------> #{cmd}"
+  system cmd
+end
+
+Rake::Task["release:source_control_push"].enhance([:changelog, :changelog_commit])
+
+task :default => :everything

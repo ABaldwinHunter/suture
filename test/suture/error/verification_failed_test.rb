@@ -6,7 +6,8 @@ module Suture::Error
     def test_single_failure
       test_plan = Suture::PrescribesTestPlan.new.prescribe(:pets, {
         :fail_fast => false,
-        :random_seed => 998
+        :random_seed => 998,
+        :time_limit => 30
       })
 
       error = VerificationFailed.new(test_plan, Suture::Value::TestResults.new([
@@ -81,6 +82,9 @@ module Suture::Error
           :comparator => Suture::Comparator.new, # (in: `lib/suture/comparator.rb:3`)
           :database_path => "db/suture.sqlite3",
           :fail_fast => false,
+          :call_limit => nil, # (no limit)
+          :time_limit => 30, # (in seconds)
+          :error_message_limit => nil, # (no limit)
           :random_seed => 998
         }
         ```
@@ -101,6 +105,7 @@ module Suture::Error
         :comparator => lambda {|left, right| left == right },
         :database_path => "lol.db",
         :fail_fast => true,
+        :call_limit => 42,
         :random_seed => nil
       })
       error = VerificationFailed.new(test_plan, Suture::Value::TestResults.new([
@@ -212,9 +217,12 @@ module Suture::Error
 
         ```
         {
-          :comparator => Proc, # (in: `test/suture/error/verification_failed_test.rb:101`)
+          :comparator => Proc, # (in: `test/suture/error/verification_failed_test.rb:105`)
           :database_path => "lol.db",
           :fail_fast => true,
+          :call_limit => 42,
+          :time_limit => nil, # (no limit)
+          :error_message_limit => nil, # (no limit)
           :random_seed => nil # (insertion order)
         }
         ```
@@ -228,6 +236,36 @@ module Suture::Error
           - Total calls...4
       MSG
       assert_equal expected_message, error.message
+    end
+
+    def test_error_message_limit
+      test_plan = Suture::PrescribesTestPlan.new.prescribe(:pets, {
+        :error_message_limit => 2
+      })
+      error = VerificationFailed.new(test_plan, Suture::Value::TestResults.new(
+        20.times.map { |i|
+          {
+            :observation => Suture::Value::Observation.new(
+              i,
+              :blah,
+              ["blaw"],
+              :blog
+            ),
+            :new_result => :blech,
+            :passed => false,
+            :ran => true
+          }
+        }
+      ))
+
+      assert_match "1.)", error.message
+      assert_match "(ID: 1)", error.message
+      assert_match "2.)", error.message
+      # TODO is there a "right way" to do assert_not_match?
+      assert_raises(Minitest::Assertion) { assert_match "3.)", error.message }
+      assert_match "(18 more failure messages were hidden because :error_message_limit was set to 2.)", error.message
+      assert_match ":error_message_limit => 2,", error.message
+      assert_match "- Failed........20", error.message
     end
   end
 end

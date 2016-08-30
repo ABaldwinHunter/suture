@@ -21,7 +21,7 @@ module Suture::Adapter
       Suture::Wrap::Sqlite.insert(@db, :observations, [:name, :args, :result],
                                   [@name.to_s, @args_dump, Marshal.dump(result)])
       log_info("recorded call for seam #{@name.inspect} with args `#{@args_inspect}` and result `#{result.inspect}`")
-    rescue SQLite3::ConstraintException => e
+    rescue SQLite3::ConstraintException
       old_observation = known_observation
       if @comparator.call(old_observation.result, result)
         log_debug("skipped recording of duplicate call for seam #{@name.inspect} with args `#{@args_inspect}` and result `#{result.inspect}`")
@@ -31,20 +31,13 @@ module Suture::Adapter
     end
 
     def play(only_id = nil)
-      rows = if only_id
-        Suture::Wrap::Sqlite.select(@db, :observations, "where name = ? and id = ?", [@name.to_s, only_id])
-      else
-        Suture::Wrap::Sqlite.select(@db, :observations, "where name = ?", [@name.to_s])
-      end
+      rows = Suture::Wrap::Sqlite.select(
+        @db, :observations,
+        "where name = ? #{"and id = ?" if only_id}",
+        [@name.to_s, only_id].compact
+      )
       log_debug("found #{rows.size} recorded calls for seam #{@name.inspect}.")
-      rows.map do |row|
-        Suture::Value::Observation.new(
-          row[0],
-          row[1].to_sym,
-          Marshal.load(row[2]),
-          Marshal.load(row[3])
-        )
-      end
+      rows.map { |row| row_to_observation(row) }
     end
 
     def delete(id)

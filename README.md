@@ -1,6 +1,6 @@
 # Suture
 
-[![Build Status](https://travis-ci.org/testdouble/suture.svg?branch=master)](https://travis-ci.org/testdouble/suture)
+[![Build Status](https://travis-ci.org/testdouble/suture.svg?branch=master)](https://travis-ci.org/testdouble/suture) [![Code Climate](https://codeclimate.com/github/testdouble/suture/badges/gpa.svg)](https://codeclimate.com/github/testdouble/suture) [![Test Coverage](https://codeclimate.com/github/testdouble/suture/badges/coverage.svg)](https://codeclimate.com/github/testdouble/suture/coverage)
 
 A refactoring tool for Ruby, designed to make it safe to change code you don't
 confidently understand. In fact, changing untrustworthy code is so fraught,
@@ -97,7 +97,7 @@ implementations behave the same way.
 First, we tell Suture to start recording calls by setting the environment
 variable `SUTURE_RECORD_CALLS` to something truthy (e.g.
 `SUTURE_RECORD_CALLS=true bundle exec rails s`). So long as this variable is set,
-any calls to our suture will record the arguments passed to the legacy code path
+any calls to our seam will record the arguments passed to the legacy code path
 and the return value.
 
 As you use the application (whether it's a queue system, a web app, or a CLI),
@@ -344,8 +344,8 @@ end
 ### Retrying failures
 
 Since the legacy code path hasn't been deleted yet, there's no reason to leave
-users hanging if the new code path explodes. By setting the `:fallback_to_old` 
-entry to `true`, Suture will rescue any errors raised from the new code path and 
+users hanging if the new code path explodes. By setting the `:fallback_to_old`
+entry to `true`, Suture will rescue any errors raised from the new code path and
 attempt to invoke the legacy code path instead.
 
 ``` ruby
